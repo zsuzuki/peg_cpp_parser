@@ -18,10 +18,11 @@ enum class department : uint16_t {
 typedef char text_t[TEXT_SIZE];
 
 struct DATA_row {
-  text_t     Name; // 日本語
+  text_t           Name; // 日本語
   department Department;
-  std::int   Age;
-  uint32_t   Number; // Empolyee number
+  std::atomic<int>  Age;
+  uint32_t       Number; // Empolyee number
+  int      DeskItem[10];
 };
 
 } // namespace Data

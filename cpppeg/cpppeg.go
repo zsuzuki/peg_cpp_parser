@@ -9,6 +9,7 @@ import (
 type CppVariable struct {
 	Type string
 	Name string
+	Size string
 }
 
 // CppStruct is single struct information
@@ -49,6 +50,7 @@ type Body struct {
 	enumNumber  int
 	enumSize    string
 	hasNS       bool
+	arraySize   string
 	debugMode   bool
 }
 
@@ -149,9 +151,10 @@ func (b *Body) setVar() {
 		VarType = b.Literals[StackTop-3] + "::" + VarType
 		popnum++
 	}
-	b.Variables = append(b.Variables, CppVariable{Type: VarType, Name: VarName})
+	b.Variables = append(b.Variables, CppVariable{Type: VarType, Name: VarName, Size: b.arraySize})
 	b.popLiterals(popnum)
 	b.hasNS = false
+	b.arraySize = ""
 }
 
 func (b *Body) useNamespace() {
@@ -161,6 +164,12 @@ func (b *Body) useNamespace() {
 		fmt.Println("namespace:" + name)
 	}
 	b.hasNS = true
+}
+
+func (b *Body) useArray() {
+	stacktop := len(b.Literals)
+	b.arraySize = b.Literals[stacktop-1]
+	b.popLiterals(1)
 }
 
 func (b *Body) pushLiteral(l string) {
@@ -181,6 +190,8 @@ func (b *Body) Setup(debug bool) {
 	b.Enumerates = []CppEnum{}
 	b.enumSize = "int"
 	b.debugMode = debug
+	b.hasNS = false
+	b.arraySize = ""
 }
 
 // Finish close process parser

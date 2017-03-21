@@ -40,10 +40,11 @@ block <- _* '{' block_body* '}' _?
 
 block_body <- _ / vardef / comment
 
-vardef <- vartype _ literal ';' { p.setVar() }
+vardef <- vartype _ literal ('[' literal ']' {p.useArray()})? ';' { p.setVar() }
 
-vartype <- (literal '::' {p.useNamespace()})? literal
+vartype <- (literal '::' {p.useNamespace()})? typeliteral
 
 literal <- <[A-Za-z0-9_]+> { p.pushLiteral(text) }
+typeliteral <- <[A-Za-z0-9<>_]+> { p.pushLiteral(text) }
 
 _ <- [ \t\r\n]+

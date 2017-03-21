@@ -76,7 +76,12 @@ func main() {
 			for _, st := range ns.StructList {
 				fmt.Printf("  %s in %d\n", st.Name, len(st.Variables))
 				for _, sv := range st.Variables {
-					fmt.Printf("    %s\t%s\n", sv.Type, sv.Name)
+					fmt.Printf("    %s\t%s%s\n", sv.Type, sv.Name, func() string {
+						if sv.Size != "" {
+							return "[" + sv.Size + "]"
+						}
+						return ""
+					}())
 				}
 			}
 		}
