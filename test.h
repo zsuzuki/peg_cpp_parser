@@ -20,7 +20,7 @@ typedef char text_t[TEXT_SIZE];
 struct DATA_row {
   text_t     Name; // 日本語
   department Department;
-  int        Age;
+  std::int   Age;
   uint32_t   Number; // Empolyee number
 };
 
