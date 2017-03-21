@@ -63,7 +63,7 @@ func main() {
 	parser.Init()
 	err = parser.Parse()
 	if err != nil {
-		fmt.Printf("%s: %d: %s\n", filename, parser.GetLineNumber(), err)
+		fmt.Printf("%s:%s\n", filename, err)
 		os.Exit(1)
 	}
 
