@@ -1,0 +1,47 @@
+package cpppeg
+
+type Parser Peg {
+    Body
+}
+
+root <- expr* EOT
+
+EOT <- !.
+
+expr <- _ / struct / comment / namespace / include / cpp / cppendif / enum / typedef
+
+cpp <- '#' ('define' / 'ifndef' / 'ifdef'/ 'pragma') [ \t]+ <[A-Za-z0-9_]+> ([ \tA-Za-z0-9]+)* '\n'
+
+cppendif <- '#endif'
+
+include <- '#include ' [<\"] <[A-Za-z0-9_/.]+> [>\"] '\n'
+
+namespace <- 'namespace' _ literal _* '{' expr* '}' { p.setNamespace() }
+
+comment <- '//' (!'\n' .)* '\n' /
+        '/*' (!'*/' .)* '*/' {p.dump("Comment")}
+
+typedef <- 'typedef' [ \t]+ [A-Za-z0-9_]+ [ \t]+ <[A-Za-z0-9_\[\]]+> ';' {p.dump(text)}
+
+enum <- enumdef _? '{' enum_body* '}' _? ';' { p.closeEnum() }
+
+enumdef <- 'enum' (_ 'class' _ literal enumsize? { p.makeEnum(true,true) } /
+                   _ literal enumsize? { p.makeEnum(true,false) } /
+                   { p.makeEnum(false,false) })
+
+enumsize <- _? ':' _? literal { p.setEnumSize() }
+
+enum_body <- _ / comment /
+             literal (_? '=' _? <[0-9]+> {p.resetEnum(text)})? ','? {p.setEnumValue()}
+
+struct <- 'struct' _ literal block ';' { p.setStruct() }
+
+block <- _* '{' block_body* '}' _?
+
+block_body <- _ / vardef / comment
+
+vardef <- literal _ literal ';' { p.setVar() }
+
+literal <- <[A-Za-z0-9_]+> { p.pushLiteral(text) }
+
+_ <- [ \t\r\n]+
