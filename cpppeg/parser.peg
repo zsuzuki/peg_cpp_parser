@@ -8,7 +8,7 @@ root <- expr* EOT
 
 EOT <- !.
 
-expr <- _ / struct / comment / namespace / include / cpp / cppendif / enum / typedef
+expr <- _ / struct / comment / namespace / include / cpp / cppendif / enum / typedef / using
 
 cpp <- '#' ('define' / 'ifndef' / 'ifdef'/ 'pragma') [ \t]+ <[A-Za-z0-9_]+> ([ \tA-Za-z0-9]+)* '\n'
 
@@ -22,6 +22,8 @@ comment <- '//' <(!'\n' .)*> '\n' {p.setComment(text)} /
         '/*' <(!'*/' .)*> '*/' {p.setComment(text)}
 
 typedef <- 'typedef' [ \t]+ [A-Za-z0-9_]+ [ \t]+ <[A-Za-z0-9_\[\]]+> ';' {p.dump(text)}
+
+using <- 'using' [ \t]+ [A-Za-z0-9_]+ [ \t]* '=' [\t]* (!'\n' .)+ '\n'
 
 enum <- enumdef _? '{' enum_body* '}' _? ';' { p.closeEnum() }
 

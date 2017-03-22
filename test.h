@@ -17,6 +17,7 @@ enum class department : uint16_t {
 };
 
 typedef char text_t[TEXT_SIZE];
+using string_t = std::string<char>
 
 struct DATA_row {
   text_t           Name; // 日本語
