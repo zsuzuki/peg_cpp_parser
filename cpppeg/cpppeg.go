@@ -5,11 +5,20 @@ import (
 	"strconv"
 )
 
+type state int
+
+const (
+	inGlobal state = iota
+	inEnum
+	inStruct
+)
+
 // CppVariable is struct member information
 type CppVariable struct {
-	Type string
-	Name string
-	Size string
+	Type    string
+	Name    string
+	Size    string
+	Comment string
 }
 
 // CppStruct is single struct information
@@ -21,8 +30,9 @@ type CppStruct struct {
 
 // CppEnumValue is enum value set
 type CppEnumValue struct {
-	Name  string
-	Value int
+	Name    string
+	Value   int
+	Comment string
 }
 
 // CppEnum is enum
@@ -46,8 +56,8 @@ type Body struct {
 	line        int
 	Namespace   map[string]CppNamespace
 	StructList  []CppStruct
-	Variables   []CppVariable
-	Enumerates  []CppEnum
+	variables   []CppVariable
+	enumerates  []CppEnum
 	currentStr  CppStruct
 	currentEnum CppEnum
 	enumNumber  int
@@ -56,6 +66,7 @@ type Body struct {
 	arraySize   string
 	comment     string
 	debugMode   bool
+	state       state
 }
 
 //
@@ -66,30 +77,49 @@ func (b *Body) popLiterals(p int) {
 }
 
 func (b *Body) setComment(c string) {
-	b.comment = c
+	switch b.state {
+	case inGlobal:
+		b.comment = c
+	case inEnum:
+		top := len(b.currentEnum.EnumValue)
+		if top > 0 {
+			b.currentEnum.EnumValue[top-1].Comment = c
+		} else {
+			b.comment = c
+		}
+	case inStruct:
+		top := len(b.variables)
+		if top > 0 {
+			b.variables[top-1].Comment = c
+		} else {
+			b.comment = c
+		}
+	}
 }
 
 func (b *Body) makeEnum(hasliteral bool, isclass bool) {
 	name := "-"
 	if hasliteral {
-		StackTop := len(b.Literals)
-		name = b.Literals[StackTop-1]
+		stackTop := len(b.Literals)
+		name = b.Literals[stackTop-1]
 		b.popLiterals(1)
 	}
 	//fmt.Println("makeEnum:" + name)
 	b.enumNumber = 0
 	b.currentEnum = CppEnum{Name: name, IsClass: isclass, ValueSize: b.enumSize, EnumValue: []CppEnumValue{}, Comment: b.comment}
 	b.comment = ""
+	b.state = inEnum
 }
 
 func (b *Body) closeEnum() {
-	b.Enumerates = append(b.Enumerates, b.currentEnum)
+	b.enumerates = append(b.enumerates, b.currentEnum)
 	b.comment = ""
+	b.state = inGlobal
 }
 
 func (b *Body) setEnumValue() {
-	StackTop := len(b.Literals)
-	name := b.Literals[StackTop-1]
+	stackTop := len(b.Literals)
+	name := b.Literals[stackTop-1]
 	//fmt.Printf("setEnumValue: %s(%d)\n", name, b.currentEnum.Current)
 	b.currentEnum.EnumValue = append(b.currentEnum.EnumValue, CppEnumValue{Name: name, Value: b.enumNumber})
 	b.enumNumber++
@@ -128,8 +158,8 @@ func (b *Body) addNamespace(name string) CppNamespace {
 	if len(b.StructList) > 0 {
 		ns.StructList = append(ns.StructList, b.StructList...)
 	}
-	if len(b.Enumerates) > 0 {
-		ns.Enumerates = append(ns.Enumerates, b.Enumerates...)
+	if len(b.enumerates) > 0 {
+		ns.Enumerates = append(ns.Enumerates, b.enumerates...)
 	}
 	return ns
 }
@@ -139,7 +169,7 @@ func (b *Body) setNamespace() {
 	Name := b.Literals[StackTop-1]
 	b.Namespace[Name] = b.addNamespace(Name)
 	b.StructList = []CppStruct{}
-	b.Enumerates = []CppEnum{}
+	b.enumerates = []CppEnum{}
 	b.enumSize = "int"
 	b.popLiterals(1)
 }
@@ -150,13 +180,15 @@ func (b *Body) makeStruct() {
 	b.currentStr = CppStruct{Name: name, Comment: b.comment}
 	b.comment = ""
 	b.popLiterals(1)
+	b.state = inStruct
 }
 
 func (b *Body) setStruct() {
-	b.currentStr.Variables = b.Variables
+	b.currentStr.Variables = b.variables
 	b.StructList = append(b.StructList, b.currentStr)
-	b.Variables = []CppVariable{}
+	b.variables = []CppVariable{}
 	b.comment = ""
+	b.state = inGlobal
 }
 
 func (b *Body) setVar() {
@@ -168,7 +200,7 @@ func (b *Body) setVar() {
 		VarType = b.Literals[StackTop-3] + "::" + VarType
 		popnum++
 	}
-	b.Variables = append(b.Variables, CppVariable{Type: VarType, Name: VarName, Size: b.arraySize})
+	b.variables = append(b.variables, CppVariable{Type: VarType, Name: VarName, Size: b.arraySize})
 	b.popLiterals(popnum)
 	b.hasNS = false
 	b.arraySize = ""
@@ -203,18 +235,19 @@ func (b *Body) Setup(debug bool) {
 	b.line = 1
 	b.Namespace = map[string]CppNamespace{}
 	b.StructList = []CppStruct{}
-	b.Variables = []CppVariable{}
-	b.Enumerates = []CppEnum{}
+	b.variables = []CppVariable{}
+	b.enumerates = []CppEnum{}
 	b.enumSize = "int"
 	b.debugMode = debug
 	b.hasNS = false
 	b.comment = ""
 	b.arraySize = ""
+	b.state = inGlobal
 }
 
 // Finish close process parser
 func (b *Body) Finish() {
-	if len(b.StructList) > 0 || len(b.Enumerates) > 0 {
+	if len(b.StructList) > 0 || len(b.enumerates) > 0 {
 		if b.debugMode {
 			fmt.Println("add global namespace(\"--\")")
 		}
@@ -227,7 +260,7 @@ func (b *Body) GetNamespace() map[string]CppNamespace {
 	return b.Namespace
 }
 
-// GetLine is get line number on error
+// GetLineNumber is get line number on error
 func (b *Body) GetLineNumber() int {
 	return b.line
 }

@@ -76,12 +76,12 @@ func main() {
 			for _, st := range ns.StructList {
 				fmt.Printf("  %s in %d comment:%s\n", st.Name, len(st.Variables), st.Comment)
 				for _, sv := range st.Variables {
-					fmt.Printf("    %s\t%s%s\n", sv.Type, sv.Name, func() string {
+					fmt.Printf("    %s\t%s%s comment:%s\n", sv.Type, sv.Name, func() string {
 						if sv.Size != "" {
 							return "[" + sv.Size + "]"
 						}
 						return ""
-					}())
+					}(), sv.Comment)
 				}
 			}
 		}
@@ -94,7 +94,7 @@ func main() {
 					return ""
 				}(), enum.Comment)
 				for _, ev := range enum.EnumValue {
-					fmt.Printf("  %s = %d\n", ev.Name, ev.Value)
+					fmt.Printf("  %s = %d comment:%s\n", ev.Name, ev.Value, ev.Comment)
 				}
 			}
 		}
