@@ -18,6 +18,7 @@ type CppVariable struct {
 	Type    string
 	Name    string
 	Size    string
+	Value   string
 	Comment string
 }
 
@@ -65,6 +66,7 @@ type Body struct {
 	hasNS       bool
 	arraySize   string
 	comment     string
+	initValue   string
 	debugMode   bool
 	state       state
 }
@@ -200,10 +202,11 @@ func (b *Body) setVar() {
 		VarType = b.Literals[StackTop-3] + "::" + VarType
 		popnum++
 	}
-	b.variables = append(b.variables, CppVariable{Type: VarType, Name: VarName, Size: b.arraySize})
+	b.variables = append(b.variables, CppVariable{Type: VarType, Name: VarName, Size: b.arraySize, Value: b.initValue})
 	b.popLiterals(popnum)
 	b.hasNS = false
 	b.arraySize = ""
+	b.initValue = ""
 }
 
 func (b *Body) useNamespace() {
@@ -218,6 +221,12 @@ func (b *Body) useNamespace() {
 func (b *Body) useArray() {
 	stacktop := len(b.Literals)
 	b.arraySize = b.Literals[stacktop-1]
+	b.popLiterals(1)
+}
+
+func (b *Body) setVarInit() {
+	stacktop := len(b.Literals)
+	b.initValue = b.Literals[stacktop-1]
 	b.popLiterals(1)
 }
 
@@ -242,6 +251,7 @@ func (b *Body) Setup(debug bool) {
 	b.hasNS = false
 	b.comment = ""
 	b.arraySize = ""
+	b.initValue = ""
 	b.state = inGlobal
 }
 

@@ -44,7 +44,9 @@ block <- _* '{' block_body* '}' _?
 
 block_body <- _ / vardef / comment
 
-vardef <- vartype _ literal ('[' literal ']' {p.useArray()})? ';' { p.setVar() }
+vardef <- vartype _ literal ('[' literal ']' {p.useArray()})? varinit? _? ';' { p.setVar() }
+
+varinit <- _? '=' _? ('{' literal '}' / '(' literal ')' / literal) {p.setVarInit()}
 
 vartype <- (literal '::' {p.useNamespace()})? typeliteral
 

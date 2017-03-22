@@ -76,12 +76,19 @@ func main() {
 			for _, st := range ns.StructList {
 				fmt.Printf("  %s in %d comment:%s\n", st.Name, len(st.Variables), st.Comment)
 				for _, sv := range st.Variables {
-					fmt.Printf("    %s\t%s%s comment:%s\n", sv.Type, sv.Name, func() string {
-						if sv.Size != "" {
-							return "[" + sv.Size + "]"
-						}
-						return ""
-					}(), sv.Comment)
+					fmt.Printf("    %s\t%s%s %scomment:%s\n", sv.Type, sv.Name,
+						func() string {
+							if sv.Value != "" {
+								return " = " + sv.Value
+							}
+							return ""
+						}(),
+						func() string {
+							if sv.Size != "" {
+								return "[" + sv.Size + "]"
+							}
+							return ""
+						}(), sv.Comment)
 				}
 			}
 		}
