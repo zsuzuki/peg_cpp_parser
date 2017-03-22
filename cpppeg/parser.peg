@@ -18,8 +18,8 @@ include <- '#include ' [<\"] <[A-Za-z0-9_/.]+> [>\"] '\n'
 
 namespace <- 'namespace' _ literal _* '{' expr* '}' { p.setNamespace() }
 
-comment <- '//' (!'\n' .)* '\n' /
-        '/*' (!'*/' .)* '*/' {p.dump("Comment")}
+comment <- '//' <(!'\n' .)*> '\n' {p.setComment(text)} /
+        '/*' <(!'*/' .)*> '*/' {p.setComment(text)}
 
 typedef <- 'typedef' [ \t]+ [A-Za-z0-9_]+ [ \t]+ <[A-Za-z0-9_\[\]]+> ';' {p.dump(text)}
 
@@ -34,7 +34,9 @@ enumsize <- _? ':' _? literal { p.setEnumSize() }
 enum_body <- _ / comment /
              literal (_? '=' _? <[0-9]+> {p.resetEnum(text)})? ','? {p.setEnumValue()}
 
-struct <- 'struct' _ literal block ';' { p.setStruct() }
+struct <- struct_header block ';' { p.setStruct() }
+
+struct_header <- 'struct' _ literal { p.makeStruct() }
 
 block <- _* '{' block_body* '}' _?
 

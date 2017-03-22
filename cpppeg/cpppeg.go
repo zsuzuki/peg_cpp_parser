@@ -15,6 +15,7 @@ type CppVariable struct {
 // CppStruct is single struct information
 type CppStruct struct {
 	Name      string
+	Comment   string
 	Variables []CppVariable
 }
 
@@ -29,6 +30,7 @@ type CppEnum struct {
 	Name      string
 	IsClass   bool
 	ValueSize string
+	Comment   string
 	EnumValue []CppEnumValue
 }
 
@@ -46,11 +48,13 @@ type Body struct {
 	StructList  []CppStruct
 	Variables   []CppVariable
 	Enumerates  []CppEnum
+	currentStr  CppStruct
 	currentEnum CppEnum
 	enumNumber  int
 	enumSize    string
 	hasNS       bool
 	arraySize   string
+	comment     string
 	debugMode   bool
 }
 
@@ -59,6 +63,10 @@ type Body struct {
 //
 func (b *Body) popLiterals(p int) {
 	b.Literals = b.Literals[:len(b.Literals)-p]
+}
+
+func (b *Body) setComment(c string) {
+	b.comment = c
 }
 
 func (b *Body) makeEnum(hasliteral bool, isclass bool) {
@@ -70,11 +78,13 @@ func (b *Body) makeEnum(hasliteral bool, isclass bool) {
 	}
 	//fmt.Println("makeEnum:" + name)
 	b.enumNumber = 0
-	b.currentEnum = CppEnum{Name: name, IsClass: isclass, ValueSize: b.enumSize, EnumValue: []CppEnumValue{}}
+	b.currentEnum = CppEnum{Name: name, IsClass: isclass, ValueSize: b.enumSize, EnumValue: []CppEnumValue{}, Comment: b.comment}
+	b.comment = ""
 }
 
 func (b *Body) closeEnum() {
 	b.Enumerates = append(b.Enumerates, b.currentEnum)
+	b.comment = ""
 }
 
 func (b *Body) setEnumValue() {
@@ -134,12 +144,19 @@ func (b *Body) setNamespace() {
 	b.popLiterals(1)
 }
 
-func (b *Body) setStruct() {
-	StackTop := len(b.Literals)
-	Name := b.Literals[StackTop-1]
-	b.StructList = append(b.StructList, CppStruct{Name: Name, Variables: b.Variables})
-	b.Variables = []CppVariable{}
+func (b *Body) makeStruct() {
+	stackTop := len(b.Literals)
+	name := b.Literals[stackTop-1]
+	b.currentStr = CppStruct{Name: name, Comment: b.comment}
+	b.comment = ""
 	b.popLiterals(1)
+}
+
+func (b *Body) setStruct() {
+	b.currentStr.Variables = b.Variables
+	b.StructList = append(b.StructList, b.currentStr)
+	b.Variables = []CppVariable{}
+	b.comment = ""
 }
 
 func (b *Body) setVar() {
@@ -191,6 +208,7 @@ func (b *Body) Setup(debug bool) {
 	b.enumSize = "int"
 	b.debugMode = debug
 	b.hasNS = false
+	b.comment = ""
 	b.arraySize = ""
 }
 

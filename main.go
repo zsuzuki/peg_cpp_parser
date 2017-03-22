@@ -74,7 +74,7 @@ func main() {
 		fmt.Println("Namespace: " + nn)
 		if *structlist == true {
 			for _, st := range ns.StructList {
-				fmt.Printf("  %s in %d\n", st.Name, len(st.Variables))
+				fmt.Printf("  %s in %d comment:%s\n", st.Name, len(st.Variables), st.Comment)
 				for _, sv := range st.Variables {
 					fmt.Printf("    %s\t%s%s\n", sv.Type, sv.Name, func() string {
 						if sv.Size != "" {
@@ -87,12 +87,12 @@ func main() {
 		}
 		if *enumlist == true {
 			for _, enum := range ns.Enumerates {
-				fmt.Printf("Enum[%s]: %s%s\n", enum.Name, enum.ValueSize, func() string {
+				fmt.Printf("Enum[%s]: %s%s comment:%s\n", enum.Name, enum.ValueSize, func() string {
 					if enum.IsClass {
 						return "(class)"
 					}
 					return ""
-				}())
+				}(), enum.Comment)
 				for _, ev := range enum.EnumValue {
 					fmt.Printf("  %s = %d\n", ev.Name, ev.Value)
 				}

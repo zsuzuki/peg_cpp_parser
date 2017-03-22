@@ -9,6 +9,7 @@
 namespace Data {
 
 enum { TEXT_SIZE = 256 };
+// HELLO Department enumerate
 enum class department : uint16_t {
   Research,   // R&D
   Accounting,
@@ -23,6 +24,15 @@ struct DATA_row {
   std::atomic<int>  Age;
   uint32_t       Number; // Empolyee number
   int      DeskItem[10];
+};
+
+// HUMAN DATA
+struct HUMAN_row
+{
+  text_t name;
+  int8_t age;
+  int8_t tall;
+  int8_t weight;
 };
 
 } // namespace Data
