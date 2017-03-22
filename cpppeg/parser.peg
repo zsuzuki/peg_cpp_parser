@@ -46,11 +46,12 @@ block_body <- _ / vardef / comment
 
 vardef <- vartype _ literal ('[' literal ']' {p.useArray()})? varinit? _? ';' { p.setVar() }
 
-varinit <- _? '=' _? ('{' literal '}' / '(' literal ')' / literal) {p.setVarInit()}
+varinit <- _? '=' _? ('{' valueliteral '}' / '(' valueliteral ')' / valueliteral) {p.setVarInit()}
 
 vartype <- (literal '::' {p.useNamespace()})? typeliteral
 
 literal <- <[A-Za-z0-9_]+> { p.pushLiteral(text) }
 typeliteral <- <[A-Za-z0-9<>_]+> { p.pushLiteral(text) }
+valueliteral <- <[A-Za-z0-9_\-]+> { p.pushLiteral(text) }
 
 _ <- [ \t\r\n]+

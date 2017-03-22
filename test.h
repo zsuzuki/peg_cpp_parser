@@ -31,7 +31,7 @@ struct DATA_row {
 struct HUMAN_row
 {
   text_t name;
-  int8_t age = 10;
+  int8_t age = -10;
   int8_t tall = 175;
   int8_t weight = 70;
 };
