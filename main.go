@@ -71,19 +71,31 @@ func main() {
 	parser.Execute()
 	parser.Finish()
 
-	if *structlist == true {
-		tpl := template.Must(template.ParseFiles("struct.tpl"))
-		if err = tpl.Execute(os.Stdout, parser.GetNamespace()); err != nil {
+	// print function
+	putfunc := func(fname string) bool {
+		tpl := template.Must(template.ParseFiles(fname))
+		if err := tpl.Execute(os.Stdout, parser.GetNamespace()); err != nil {
 			fmt.Println(err)
+			return false
 		}
+		return true
+	}
+
+	result := true
+	if *structlist == true {
+		result = putfunc("struct.tpl")
 	}
 	if *enumlist == true {
-		tpl := template.Must(template.ParseFiles("enum.tpl"))
-		if err = tpl.Execute(os.Stdout, parser.GetNamespace()); err != nil {
-			fmt.Println(err)
-		}
+		result = putfunc("enum.tpl")
 	}
-	fmt.Println("done.")
+
+	if result {
+		fmt.Println("done.")
+	} else {
+		fmt.Println("error.")
+		os.Exit(1)
+	}
+
 }
 
 //
